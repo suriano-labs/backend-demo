@@ -1,0 +1,103 @@
+{
+  "$schema": "https://www.krakend.io/schema/v3.json",
+  "version": 3,
+  "plugin": {
+    "pattern":".so",
+    "folder": "/opt/krakend/plugins/"
+  },
+  "extra_config":{
+    "plugin/http-server":{
+        "name":["billing"],
+        "api-monetization":{
+          "endpoint_checker": "http://billing-manager:8000/credit-check",
+          "endpoint_charge": "http://billing-manager:8000/bill-charge"
+      }
+    }
+},
+  "name": "DevOpsBootCamp",
+  "timeout": "3000ms",
+  "cache_ttl": "300s",
+  "output_encoding": "json",
+  "port": 3890,
+  "debug_endpoint": true,
+  "echo_endpoint": true,
+  "sequential_start": true,
+  "endpoints": [
+    {
+      "endpoint": "/v1/github/{user}/billing",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/users/{user}",
+          "encoding": "json",
+          "sd": "static",
+          "method": "GET",
+          "host": [
+            "https://api.github.com"
+          ],
+          "disable_host_sanitize": false,
+          "extra_config": {
+            "plugin/http-client": {
+              "name": "http-client",
+              "http-client": {
+                "path": "/__debug/hijack-me"
+              }
+            }
+          }
+        }          
+      ]
+    },
+    {
+      "endpoint": "/v1/github/{user}",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/users/{user}",
+          "encoding": "json",
+          "sd": "static",
+          "method": "GET",
+          "host": [
+            "https://api.github.com"
+          ],
+          "disable_host_sanitize": false
+        }           
+      ]
+    },
+    {
+      "endpoint": "/plugin/user-vagalume",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/user",
+          "encoding": "json",
+          "sd": "static",
+          "method": "GET",
+          "host": [
+            "http://api-backend-test:8000"
+          ],
+          "disable_host_sanitize": false
+        }           
+      ]
+    },
+    {
+      "endpoint": "/plugin/health-check",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/health-check",
+          "encoding": "json",
+          "sd": "static",
+          "method": "GET",
+          "host": [            
+            "http://api-backend-test:8000"
+          ],
+          "disable_host_sanitize": false
+        }           
+      ]
+    }
+  ]
+}
